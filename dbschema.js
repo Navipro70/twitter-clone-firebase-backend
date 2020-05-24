@@ -19,6 +19,14 @@ let db = {
             likeCount: 5,
             commentCount: 2
         }
+    ],
+    comments: [
+        {
+            userHandle: 'userName',
+            postId: '1Jqm8JQ9dO0zqQKaz914hnvGZ0',
+            commentText: 'This is comment text',
+            timestamp: '2020-05-21T22:39:07.797Z'
+        }
     ]
 };
 
@@ -44,4 +52,4 @@ const userDetails = {
             postId: "1iQ8mqN8qkc8u1kc"
         }
     ]
-}
+};
