@@ -23,14 +23,19 @@ exports.getAllPosts = (req, res) => {
 exports.createOnePost = (req, res) => {
     const newPost = {
         userHandle: req.user.handle,
+        userImage: req.user.imageUrl,
         postText: req.body.postText,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        likeCount: 0,
+        commentCount: 0
     };
     db
         .collection('posts')
         .add(newPost)
         .then(doc => {
-            res.json({message: `Document ${doc.id} created successfully`})
+            const resPost = newPost;
+            resPost.postId = doc.id;
+            res.json(resPost)
         })
         .catch(err => {
             res.status(500).json({error: 'Something went wrong'});
@@ -82,11 +87,89 @@ exports.createNewComment = (req, res) => {
         .doc(`/posts/${req.params.postId}`)
         .get()
         .then(doc => {
-            if(!doc.exists) return res.status(404).json({error: 'Not found'});
+            if (!doc.exists) return res.status(404).json({error: 'Not found'});
             return db.collection('comments').add(commentData)
         })
         .then(() => {
             return res.json(commentData)
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
+};
+
+exports.likePost = (req, res) => {
+    const likeData = {
+        userHandle: req.user.handle,
+        postId: req.params.postId
+    };
+    let postData;
+    const likeDocument = db
+        .collection(`likes`)
+        .where('userHandle', '==', req.user.handle)
+        .where('postId', '==', req.params.postId)
+        .limit(1);
+
+    let postDocument = db.doc(`/posts/${req.params.postId}`);
+
+    postDocument
+        .get()
+        .then((doc) => {
+            if (!doc.exists) return res.status(404).json({error: 'Not found'});
+            postData = doc.data();
+            postData.postId = doc.id;
+            return likeDocument.get()
+        })
+        .then(data => {
+            if (data.empty) {
+                return db.collection(`likes`).add(likeData)
+                    .then(() => {
+                        postData.likeCount++;
+                        return postDocument.update({likeCount: postData.likeCount})
+                    })
+                    .then(() => {
+                        return res.json(postData)
+                    })
+            } else return res.status(400).json({error: 'Post already liked'})
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
+};
+
+exports.unlikePost = (req, res) => {
+    let postData;
+    const likeDocument = db
+        .collection(`likes`)
+        .where('userHandle', '==', req.user.handle)
+        .where('postId', '==', req.params.postId)
+        .limit(1);
+
+    let postDocument = db.doc(`/posts/${req.params.postId}`);
+
+    postDocument
+        .get()
+        .then((doc) => {
+            if (!doc.exists) return res.status(404).json({error: 'Not found'});
+            postData = doc.data();
+            postData.postId = doc.id;
+            return likeDocument.get()
+        })
+        .then(data => {
+            if (data.empty) {
+                return res.status(400).json({error: 'Post is not liked'})
+            } else {
+                return db.doc(`/likes/${data.docs[0].id}`).delete()
+                    .then(() => {
+                        postData.likeCount--;
+                        return postDocument.update({likeCount: postData.likeCount})
+                    })
+                    .then(() => {
+                        return res.json({postData})
+                    })
+            }
         })
         .catch(err => {
             console.error(err);

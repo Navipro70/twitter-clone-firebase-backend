@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const express = require('express');
 
-const {getAllPosts, createOnePost, getPost, createNewComment} = require('./handlers/posts');
+const {getAllPosts, createOnePost, getPost, createNewComment, likePost, unlikePost} = require('./handlers/posts');
 const {signup, login, uploadImage, addUserDetails, getAuthenticatedUserData} = require('./handlers/users');
 const firebaseIsAuth = require('./utils/firebaseIsAuth');
 
@@ -12,8 +12,9 @@ app.get('/posts', getAllPosts); //Get all posts
 app.post('/createPost', firebaseIsAuth, createOnePost); //Create one post
 app.get('/post/:postId', getPost); //Get post by id
 //TODO delete scream
-//TODO like a post
-//TODO unlike a post
+
+app.get('/post/:postId/like', firebaseIsAuth, likePost); //Like post
+app.get('/post/:postId/unlike', firebaseIsAuth, unlikePost); //Like post
 app.post('/post/:postId/comment', firebaseIsAuth, createNewComment); //Make comment on a post
 
 //-----Users Routs-----
