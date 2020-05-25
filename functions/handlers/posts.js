@@ -88,6 +88,9 @@ exports.createNewComment = (req, res) => {
         .get()
         .then(doc => {
             if (!doc.exists) return res.status(404).json({error: 'Not found'});
+            return doc.ref.update({ commentCount: doc.data().commentCount + 1})
+        })
+        .then(() => {
             return db.collection('comments').add(commentData)
         })
         .then(() => {
@@ -170,6 +173,24 @@ exports.unlikePost = (req, res) => {
                         return res.json({postData})
                     })
             }
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({error: err.code})
+        })
+};
+
+exports.deletePost = (req, res) => {
+    const postDocument = db.doc(`/posts/${req.params.postId}`);
+    postDocument
+        .get()
+        .then(doc => {
+            if (!doc.exists) return res.status(404).json({error: 'Post already deleted or does not exist'});
+            if (req.user.handle !== doc.data().userHandle) return res.status(403).json({error: 'Unauthorized'});
+            return postDocument.delete()
+        })
+        .then(() => {
+            res.status(200).json({message: `Post ${req.params.postId} deleted successfully`})
         })
         .catch(err => {
             console.error(err);
