@@ -53,7 +53,7 @@ exports.signup = (req, res) => {
         .catch(err => {
             console.error(err);
             if (err.code === "auth/email-already-in-use") return res.status(400).json({email: 'Email is already use'});
-            else res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         });
 };
 
@@ -77,7 +77,7 @@ exports.login = (req, res) => {
         .catch(error => {
             console.log(error);
             if (error.code === "auth/wrong-password") return res.status(500).json({general: "Wrong credential, please, try again"});
-            return res.status(500).json({error: error.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         });
 };
 
@@ -125,7 +125,7 @@ exports.uploadImage = (req, res) => {
             })
             .catch(err => {
                 console.error(err);
-                return res.status(500).json({error: err.code})
+                return res.status(500).json({general: "Something went wrong, please try again"})
             })
     });
     busboy.end(req.rawBody)
@@ -142,7 +142,44 @@ exports.addUserDetails = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({error: err.code});
+            return res.status(500).json({general: "Something went wrong, please try again"})
+        })
+};
+
+exports.getUserDetails = (req, res) => {
+    let userData = {};
+
+    db
+        .doc(`/users/${req.params.handle}`)
+        .get()
+        .then(doc => {
+            if (!doc.exists) return res.status(404).json({error: 'Not found'});
+            userData.user = doc.data();
+            return db
+                .collection(`posts`)
+                .where('userHandle', '==', req.params.handle)
+                .orderBy('timestamp', 'desc')
+                .get()
+        })
+        .then(docsOfPosts => {
+            userData.posts = [];
+            docsOfPosts.forEach(onePostDoc => {
+                const docData = onePostDoc.data();
+                userData.posts.push({
+                    postText: docData.postText,
+                    timestamp: docData.timestamp,
+                    userHandle: docData.userHandle,
+                    userImage: docData.userImage,
+                    likeCount: docData.likeCount,
+                    commentCount: docData.commentCount,
+                    postId: onePostDoc.id
+                })
+            });
+            return res.status(200).json(userData)
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -165,10 +202,46 @@ exports.getAuthenticatedUserData = (req, res) => {
             data.forEach(doc => {
                 userData.likes.push(doc.data())
             });
-            return res.json({userData})
+            return db
+                .collection('/notifications')
+                .where('recipient', '==', req.user.handle)
+                .orderBy('timestamp', 'desc')
+                .limit(10)
+                .get()
+        })
+        .then(data => {
+            userData.notifications = [];
+            data.forEach(doc => {
+                userData.notifications.push({
+                    recipient: doc.data().recipient,
+                    sender: doc.data().sender,
+                    timestamp: doc.data().timestamp,
+                    postId: doc.data().postId,
+                    type: doc.data().type,
+                    read: doc.data().read,
+                    notificationId: doc.id
+                });
+            });
+            return res.json(userData)
         })
         .catch(err => {
             console.error();
-            return res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
+        })
+};
+
+exports.markNotificationsRead = (req, res) => {
+    let batch = db.batch(); //It's require to update a Array of objects
+    req.body.forEach(notificationId => {
+        const notification = db.doc(`/notifications/${notificationId}`);
+        batch.update(notification, {read: 'true'})
+    })
+    batch.commit()
+        .then(() => {
+            return res.status(200).json({message: 'Notifications marked to read'})
+        })
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };

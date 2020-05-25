@@ -27,6 +27,16 @@ let db = {
             commentText: 'This is comment text',
             timestamp: '2020-05-21T22:39:07.797Z'
         }
+    ],
+    notifications: [
+        {
+            recipient: 'user',
+            sender: 'john',
+            read: 'true | false',
+            postId: '18QJ1Maqe8QkzmqU7kqa',
+            type: 'like | comment',
+            timestamp: '2020-05-21T22:39:07.797Z'
+        }
     ]
 };
 

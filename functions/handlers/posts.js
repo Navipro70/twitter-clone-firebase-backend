@@ -12,12 +12,16 @@ exports.getAllPosts = (req, res) => {
                     postId: doc.id,
                     postText: doc.data().postText,
                     userHandle: doc.data().userHandle,
-                    timestamp: doc.data().timestamp
+                    timestamp: doc.data().timestamp,
+                    userImage: doc.data().userImage
                 })
             });
             return res.json(posts)
         })
-        .catch(err => console.error(err))
+        .catch(err => {
+            console.error(err);
+            return res.status(500).json({general: "Something went wrong, please try again"})
+        })
 };
 
 exports.createOnePost = (req, res) => {
@@ -38,8 +42,8 @@ exports.createOnePost = (req, res) => {
             res.json(resPost)
         })
         .catch(err => {
-            res.status(500).json({error: 'Something went wrong'});
-            console.error(err)
+            console.error(err);
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -69,7 +73,7 @@ exports.getPost = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -98,7 +102,7 @@ exports.createNewComment = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -138,7 +142,7 @@ exports.likePost = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -176,7 +180,7 @@ exports.unlikePost = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
 
@@ -194,6 +198,6 @@ exports.deletePost = (req, res) => {
         })
         .catch(err => {
             console.error(err);
-            return res.status(500).json({error: err.code})
+            return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
