@@ -1,9 +1,9 @@
-#DOCS for twitter-clone-firebase-backend
-##This is not open API
+h1 DOCS for twitter-clone-firebase-backend
+h2 This is not open API
 
-#Endpoints
+h1 Endpoints
 
-##-----USERS ROUTE-----
+h2 -----USERS ROUTE-----
 ### POST '/signup' Public Router
 #### Required fields
 ##### email -string- (valid confirmed user email address, which used during registration)
