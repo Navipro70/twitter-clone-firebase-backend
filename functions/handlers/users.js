@@ -77,7 +77,8 @@ exports.login = (req, res) => {
         .catch(error => {
             console.log(error);
             if (error.code === "auth/wrong-password") return res.status(500).json({general: "Wrong credential, please, try again"});
-            return res.status(500).json({general: "Something went wrong, please try again"})
+            if (error.code === "auth/user-not-found") return res.status(500).json({general: "User not found, please, try again"});
+            return res.status(500).json({general: "Something went wrong, please, try again"})
         });
 };
 
@@ -225,7 +226,7 @@ exports.getAuthenticatedUserData = (req, res) => {
             return res.json(userData)
         })
         .catch(err => {
-            console.error();
+            console.error(err);
             return res.status(500).json({general: "Something went wrong, please try again"})
         })
 };
@@ -235,7 +236,7 @@ exports.markNotificationsRead = (req, res) => {
     req.body.forEach(notificationId => {
         const notification = db.doc(`/notifications/${notificationId}`);
         batch.update(notification, {read: 'true'})
-    })
+    });
     batch.commit()
         .then(() => {
             return res.status(200).json({message: 'Notifications marked to read'})

@@ -25,10 +25,13 @@ exports.getAllPosts = (req, res) => {
 };
 
 exports.createOnePost = (req, res) => {
+    const postText = req.body.postText.trim();
+    if (postText === '') return res.status(500).json({error: "Field can't be empty"});
+    if (postText.length > 1000) return res.status(500).json({error: "Field is too long"});
     const newPost = {
         userHandle: req.user.handle,
         userImage: req.user.imageUrl,
-        postText: req.body.postText,
+        postText: postText,
         timestamp: new Date().toISOString(),
         likeCount: 0,
         commentCount: 0
